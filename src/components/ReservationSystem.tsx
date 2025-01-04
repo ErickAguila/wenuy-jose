@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { da, es } from 'date-fns/locale'
+import { es } from 'date-fns/locale'
 import { useForm } from 'react-hook-form';
 import { z } from "zod"
+import { MessageCircle } from 'lucide-react'
 
 const FormSchema = z.object({
   username: z.string().min(2, {
@@ -38,6 +39,12 @@ export default function ReservationSystem() {
     dateTo: "",
   });
   const [message, setMessage] = useState<string>('');
+  const [reservedDays, setReservedDays] = useState<Date[]>([]);
+  const [calendarDisabled, setCalendarDisabled] = useState<boolean>(true);
+  const [btnReserved, setBtnReserved] = useState<boolean>(true);
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -62,50 +69,76 @@ export default function ReservationSystem() {
     day: 'numeric',
   };
 
-  // Create the handler that connects to EmailJS.  
   const onFindCalendar = (data: z.infer<typeof FormSchema>) => {
     if (formRef.current) {
+      if (data.house === '1') {
+        setReservedDays(reservedHouse1);
+      } else if (data.house === '2') {
+        setReservedDays(reservedHouse2);
+      } else {
+        setReservedDays(reservedHouse3);
+      }
       setFormFindCalendar({
         ...formFindCalendar,
         username: data.username,
         house: data.house,
         countPerson: data.countPerson
       });
+      setCalendarDisabled(false);
     }
   };
 
   const onSubmit = () => {
     setFormFindCalendar({
       ...formFindCalendar,
-      dateFrom: dateRange.from?.toLocaleDateString('es-ES', options) ?? "",
-      dateTo: dateRange.to?.toLocaleDateString('es-ES', options) ?? "",
+      dateFrom: dateFrom,
+      dateTo: dateTo,
     });
-    console.log(formFindCalendar);
     document.getElementById('btnwsp')?.click();
   }
 
   const changeMessage = () => {
-    const daFrom = dateRange.from?.toLocaleDateString('es-ES', options);
-    const daTo = dateRange.to?.toLocaleDateString('es-ES', options);
-    const mess = `Hola soy ${formFindCalendar.username}, me interesa la cabaña ${formFindCalendar.house}, somos ${formFindCalendar.countPerson} personas, para las fechas del ${daFrom} hasta el ${daTo}.`.replaceAll(' ', '%20');
-    setMessage(`https://wa.me/56958766555?text=${mess}`);
-    // console.log(message)
+    const ref = `Hola soy ${formFindCalendar.username}, me interesa la cabaña ${formFindCalendar.house}, somos ${formFindCalendar.countPerson} personas, para las fechas del ${dateFrom} hasta el ${dateTo}.`.replaceAll(' ', '%20');
+    setMessage(`https://wa.me/56958766555?text=${ref}`);
   }
 
-  const reservados = [
-    '2025-01-15',
-    '2025-01-20',
-    '2025-01-25',
-  ]; // Fechas reservadas en formato YYYY-MM-DD
-  
-  // Función para verificar si una fecha está reservada
-  const estaReservado = (fecha: string) => {
-    return reservados.includes(fecha);
-  };
+  const reservedHouse1 = [
+    new Date(2025, 0, 10),
+    new Date(2025, 0, 11),
+    new Date(2025, 0, 12),
+    new Date(2025, 0, 20),
+    new Date(2025, 0, 21),
+    new Date(2025, 0, 22),
+    new Date(2025, 0, 23),
+    new Date(2025, 0, 24),
+    new Date(2025, 0, 25),
+    new Date(2025, 0, 26),
+    new Date(2025, 1, 5),
+    new Date(2025, 1, 6),
+  ]
 
-  useEffect(() => { 
+  const reservedHouse2 = [
+    new Date(2025, 1, 10),
+    new Date(2025, 1, 11),
+    new Date(2025, 1, 12),
+    new Date(2025, 1, 13),
+    new Date(2025, 1, 14),
+    new Date(2025, 1, 15)
+  ]
+
+  const reservedHouse3 = [
+    new Date(2025, 0, 27),
+    new Date(2025, 0, 28),
+    new Date(2025, 0, 29),
+    new Date(2025, 0, 30)
+  ]
+
+  useEffect(() => {
+    if (dateRange.from) setDateFrom(dateRange.from?.toLocaleDateString('es-ES', options) ?? "");
+    if (dateRange.to) setDateTo(dateRange.to?.toLocaleDateString('es-ES', options) ?? "");
     changeMessage();
-  }, [formFindCalendar, dateRange.from, dateRange.to]);
+    setBtnReserved(dateRange.to ? false : true);
+  }, [formFindCalendar, dateRange.from, dateRange.to, options, changeMessage]);
 
   return (
     <section id="reserva" className="py-12 bg-background">
@@ -193,39 +226,30 @@ export default function ReservationSystem() {
             className="rounded-md border"
             locale={es}
             onDayClick={() => changeMessage()}
-            // disabled
-            // style={{ backgroundColor: 'red' }}
+            disabled={calendarDisabled}
             numberOfMonths={2}
             fromDate={new Date()}
-            
-            // render={(date) => {
-            //   const fechaFormateada = date.toISOString().split('T')[0]; // Convertimos la fecha a YYYY-MM-DD
-            //   return (
-            //     <div style={{ position: 'relative' }}>
-            //       {estaReservado(fechaFormateada) && (
-            //         <div
-            //           style={{
-            //             position: 'absolute',
-            //             top: '5px',
-            //             left: '5px',
-            //             width: '8px',
-            //             height: '8px',
-            //             borderRadius: '50%',
-            //             backgroundColor: 'red',
-            //           }}
-            //         ></div>
-            //       )}
-            //       {date.getDate()}
-            //     </div>
-            //   );
-            // }}
+            components={{
+              DayContent: ({ date, ...props }) => (
+                <div {...props} className="relative">
+                  {date.getDate()}
+                  {reservedDays.some(reservedDate =>
+                    reservedDate.getDate() === date.getDate() &&
+                    reservedDate.getMonth() === date.getMonth() &&
+                    reservedDate.getFullYear() === date.getFullYear()
+                  ) && (
+                      <div className="absolute left-1/2 transform -translate-x-1/2 w-3 h-3 bg-red-500 rounded-full" />
+                    )}
+                </div>
+              ),
+            }}
           />
           <div className="space-y-2">
             <p className="text-lg">Fecha de entrada</p>
-            <p className='text-gray-500'>{dateRange.from?.toLocaleDateString('es-ES', options)}</p>
+            <p className='text-gray-500'>{dateFrom}</p>
             <p className="text-lg">Fecha de salida</p>
-            <p className='text-gray-500'> {dateRange.to?.toLocaleDateString('es-ES', options)}</p>
-            <Button className="w-full" onClick={onSubmit}>Reservar ahora</Button>
+            <p className='text-gray-500'> {dateTo}</p>
+            <Button className="w-full bg-[#075e54]" onClick={onSubmit} disabled={btnReserved}>Reservar ahora <MessageCircle /></Button>
             <a id='btnwsp' href={message} target="_blank" rel="noopener noreferrer" hidden>WhatsApp</a>
           </div>
         </div>
