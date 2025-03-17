@@ -60,14 +60,7 @@ export default function ReservationSystem() {
   }>({
     from: undefined,
     to: undefined,
-  })
-
-  const options = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  };
+  });
 
   const onFindCalendar = (data: z.infer<typeof FormSchema>) => {
     if (formRef.current) {
@@ -102,43 +95,53 @@ export default function ReservationSystem() {
     setMessage(`https://wa.me/56958766555?text=${ref}`);
   }
 
+  const monthCurrent = new Date().getMonth();
+  const monthNext = new Date().getMonth() + 1;
+
   const reservedHouse1 = [
-    new Date(2025, 0, 10),
-    new Date(2025, 0, 11),
-    new Date(2025, 0, 12),
-    new Date(2025, 0, 20),
-    new Date(2025, 0, 21),
-    new Date(2025, 0, 22),
-    new Date(2025, 0, 23),
-    new Date(2025, 0, 24),
-    new Date(2025, 0, 25),
-    new Date(2025, 0, 26),
-    new Date(2025, 1, 5),
-    new Date(2025, 1, 6),
+    new Date(2025, monthCurrent, 10),
+    new Date(2025, monthCurrent, 11),
+    new Date(2025, monthCurrent, 12),
+    new Date(2025, monthCurrent, 20),
+    new Date(2025, monthCurrent, 21),
+    new Date(2025, monthCurrent, 22),
+    new Date(2025, monthCurrent, 23),
+    new Date(2025, monthCurrent, 24),
+    new Date(2025, monthCurrent, 25),
+    new Date(2025, monthCurrent, 26),
+    new Date(2025, monthNext, 5),
+    new Date(2025, monthNext, 6),
   ]
 
   const reservedHouse2 = [
-    new Date(2025, 1, 10),
-    new Date(2025, 1, 11),
-    new Date(2025, 1, 12),
-    new Date(2025, 1, 13),
-    new Date(2025, 1, 14),
-    new Date(2025, 1, 15)
+    new Date(2025, monthNext, 10),
+    new Date(2025, monthNext, 11),
+    new Date(2025, monthNext, 12),
+    new Date(2025, monthNext, 13),
+    new Date(2025, monthNext, 14),
+    new Date(2025, monthNext, 15)
   ]
 
   const reservedHouse3 = [
-    new Date(2025, 0, 27),
-    new Date(2025, 0, 28),
-    new Date(2025, 0, 29),
-    new Date(2025, 0, 30)
+    new Date(2025, monthCurrent, 27),
+    new Date(2025, monthCurrent, 28),
+    new Date(2025, monthCurrent, 29),
+    new Date(2025, monthCurrent, 30)
   ]
 
   useEffect(() => {
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    };
+
     if (dateRange.from) setDateFrom(dateRange.from?.toLocaleDateString('es-ES', options) ?? "");
     if (dateRange.to) setDateTo(dateRange.to?.toLocaleDateString('es-ES', options) ?? "");
     changeMessage();
     setBtnReserved(dateRange.to ? false : true);
-  }, [formFindCalendar, dateRange.from, dateRange.to, options, changeMessage]);
+  }, [formFindCalendar, dateRange.from, dateRange.to, changeMessage]);
 
   return (
     <section id="reserva" className="py-12 bg-background">
